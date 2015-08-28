@@ -1,5 +1,20 @@
 ifeq ($(CONFIG_OF),y)
 
+dtb-$(CONFIG_BCM2708_DT) += bcm2708-rpi-b.dtb
+dtb-$(CONFIG_BCM2708_DT) += bcm2708-rpi-b-plus.dtb
+dtb-$(CONFIG_BCM2708_DT) += bcm2708-rpi-cm.dtb
+dtb-$(CONFIG_BCM2709_DT) += bcm2709-rpi-2-b.dtb
+
+# Raspberry Pi
+ifeq ($(CONFIG_BCM2708_DT),y)
+   RPI_DT_OVERLAYS=y
+endif
+ifeq ($(CONFIG_BCM2709_DT),y)
+   RPI_DT_OVERLAYS=y
+endif
+
+subdir-$(RPI_DT_OVERLAYS)  += overlays
+
 # Keep at91 dtb files sorted alphabetically for each SoC
 # rm9200
 dtb-$(CONFIG_ARCH_AT91) += at91rm9200ek.dtb
@@ -54,6 +69,7 @@ dtb-$(CONFIG_ARCH_AT91)	+= at91-sama5d4ek.dtb
 dtb-$(CONFIG_ARCH_ATLAS6) += atlas6-evb.dtb
 dtb-$(CONFIG_ARCH_AXXIA) += axm5516-amarillo.dtb
 dtb-$(CONFIG_ARCH_BCM2835) += bcm2835-rpi-b.dtb
+
 dtb-$(CONFIG_ARCH_BCM_5301X) += bcm4708-netgear-r6250.dtb
 dtb-$(CONFIG_ARCH_BCM_63XX) += bcm963138dvt.dtb
 dtb-$(CONFIG_ARCH_BCM_MOBILE) += bcm28155-ap.dtb \
@@ -519,11 +535,18 @@ dtb-$(CONFIG_ARCH_MEDIATEK) += mt6589-aquaris5.dtb
 
 targets += dtbs dtbs_install
 targets += $(dtb-y)
+
+endif
+
+# Enable fixups to support overlays on BCM2708 platforms
+ifeq ($(RPI_DT_OVERLAYS),y)
+	DTC_FLAGS ?= -@
 endif
 
 # *.dtb used to be generated in the directory above. Clean out the
 # old build results so people don't accidentally use them.
 dtbs: $(addprefix $(obj)/, $(dtb-y))
+	$(Q)$(MAKE) $(build)=arch/arm/boot/dts/overlays
 	$(Q)rm -f $(obj)/../*.dtb
 
 clean-files := *.dtb
